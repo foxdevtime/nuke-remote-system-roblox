@@ -15,13 +15,14 @@ local WAVE_SPEED = 200
 local WAVE_MAX_RADIUS = 300
 local FLASH_DURATION = 4
 local NUKE_COOLDOWN = 30
+local WAVE_HEIGHT = 800
 
 local playerCooldowns = {}
 
 local function createShockwave(startPosition)
 	local wave = Instance.new("Part")
 	wave.Position = startPosition + Vector3.new(0, 0.5, 0)
-	wave.Size = Vector3.new(1, 1, 1)
+	wave.Size = Vector3.new(WAVE_HEIGHT, 1, 1)
 	wave.Anchored = true
 	wave.CanCollide = false
 	wave.Transparency = 0.5
@@ -38,15 +39,17 @@ local function applyShockwaveDamage(startPosition, wave)
 	local radius = 0
 	while radius < WAVE_MAX_RADIUS do
 		radius = (tick() - startTime) * WAVE_SPEED
-		wave.Size = Vector3.new(1, radius * 2, radius * 2)
+		wave.Size = Vector3.new(WAVE_HEIGHT, radius * 2, radius * 2)
 		for _, player in pairs(Players:GetPlayers()) do
 			if player.Character then
 				local humanoid = player.Character:FindFirstChild("Humanoid")
 				local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
 				if humanoid and rootPart and humanoid.Health > 0 then
-					local distance = (rootPart.Position - startPosition).Magnitude
+					local playerPos = rootPart.Position
+					local distance = (Vector2.new(playerPos.X, playerPos.Z) - Vector2.new(startPosition.X, startPosition.Z)).Magnitude
+					local heightDifference = math.abs(playerPos.Y - startPosition.Y)
 					local waveThickness = 5
-					if distance >= radius - waveThickness and distance <= radius + waveThickness then
+					if distance >= radius - waveThickness and distance <= radius + waveThickness and heightDifference <= WAVE_HEIGHT / 2 then
 						humanoid.Health = 0
 					end
 				end
